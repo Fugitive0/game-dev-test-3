@@ -21,6 +21,7 @@ public class playerLook : MonoBehaviour
     [Header("Referenecs")] 
     public Transform playerOrientation;
     public Transform armOrientation;
+    public Transform cameraRot;
     
     
     
