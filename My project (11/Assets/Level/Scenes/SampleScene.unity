@@ -593,13 +593,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eeae5a9f64b6a0740b92d4f7ce681699, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 9
+  moveSpeed: 30
   normalDrag: 6
-  stopMovingDrag: 2
+  stopMovingDrag: 3
   airDrag: 2
-  jumpHeight: 0
+  jumpHeight: 5
   jumpCoolDown: 0.3
-  playerHeight: 0
+  playerHeight: 2
   airSlowMuti: 3
   airMaxXVel: 180
   airMaxYVel: 180
@@ -615,14 +615,14 @@ MonoBehaviour:
     m_Bits: 8
   playerMagText: {fileID: 0}
   turnDebugOn: 0
-  _isGrounded: 0
+  _isGrounded: 1
   _isMoving: 0
   _isJumping: 0
   criteria: 0
   effectSpeed: 5
   effectAmpX: 2
   effectAmpY: 2
-  defaultYPos: 0
+  defaultYPos: 0.51
   camRot: {fileID: 187966792}
 --- !u!54 &1365396611
 Rigidbody:
