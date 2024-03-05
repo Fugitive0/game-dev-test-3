@@ -21,10 +21,14 @@ public class playerMovement : MonoBehaviour
     public float playerHeight;
     public float airSlowMuti = 3f;
 
-    [Header("Jump Head Bobbing")] public float headRotSpeed = 0.3f;
+    [Header("Jump Head Bobbing")]
+    public float headRotSpeed = 0.3f;
     public float yHeadRot = 5f;
-
-
+    public float yVelKickIn = 1f;
+    public float yVelLetGo = -2f;
+    public float lerpedValue;
+    [SerializeField] private AnimationCurve headCurve;
+    public float duration;
 
 
     public float ogCamYPos;
@@ -43,6 +47,7 @@ public class playerMovement : MonoBehaviour
     public LayerMask ground;
 
     public TextMeshProUGUI playerMagText;
+    public TextMeshProUGUI playerYVelText;
 
     [Header("Debug Settings")] [Tooltip("Show debug UI")]
 
@@ -55,8 +60,11 @@ public class playerMovement : MonoBehaviour
     private Rigidbody _rb;
     private Vector3 _moveDir;
     private Quaternion _camTargetRot;
+    private Vector3 _targetPos;
+    private Vector3 _ogPos;
     private float _horizontal;
     private float _vertical;
+    private float _elapsedTime;
     [SerializeField] private bool _isGrounded;
     [SerializeField] private bool _isMoving;
     [SerializeField] private bool _isJumping;
@@ -106,7 +114,7 @@ public class playerMovement : MonoBehaviour
         ControlDrag();
         ControlMag();
         CheckIfGrounded();
-        JumpCameraShake();
+        // JumpCameraShake();
         DebugMode(turnDebugOn);
     }
 
@@ -190,47 +198,56 @@ public class playerMovement : MonoBehaviour
         if (debug)
         {
             playerMagText.text = _rb.velocity.magnitude.ToString("F2");
-
+            playerYVelText.text = _rb.velocity.y.ToString("F2");
             // Velocity Cast
 
             Debug.DrawLine(playerOrientation.position, transform.position + _rb.velocity, Color.red);
-
-            // Wall Running Cast
-
-            Debug.DrawLine(rayLeft.position, -rayLeft.right * 10, Color.magenta);
-            Debug.DrawLine(rayLeft.position, rayLeft.right * 10, Color.magenta);
-
-
-
-
-
         }
     }
 
+    /*
 
     private void JumpCameraShake()
     {
-        // When You jump, I want the camera to tilt slightly up, and then tilt down when the magnitude of the _rb.velocity.y < desired amount
+        // Scratch the last commit. I plan on making this a feature that allows the screen itself to shake. Not rotate
+        // Rotating the camera to shake it does not seem like the best option. Instead, changing the position a little bit
+        // Does
 
+    
 
-        // Filler, still trying to understand rotation a little bit better before I tackle this :skull:
-
-
-
-    }
-
-
-
-    // CoolDowns
-
-        IEnumerator JumpCoolDown()
+        if (_rb.velocity.y >= yVelKickIn && !_isGrounded)
         {
-            yield return new WaitForSeconds(jumpCoolDown);
-            _isJumping = false;
+            _ogPos = camRot.localPosition;
+            float shookX = Random.Range(0.3f, 0.6f);
+            float shookY = Random.Range(0.3f, 0.6f);
+
+            _targetPos = new Vector3(shookX, shookY, camRot.localPosition.z);
+            
+        }
+        
+        if (_rb.velocity.y <= 0 && !_isGrounded)
+        {
+            _targetPos = Vector3.zero;
+            _elapsedTime = 0;
         }
 
 
+        _elapsedTime += Time.deltaTime;
+        float percentageComplete = _elapsedTime / duration;
+        float smoothPercentage = Mathf.SmoothStep(0.0f, 1.0f, percentageComplete);
+        camRot.localPosition = Vector3.Lerp(camRot.localPosition, _targetPos, smoothPercentage);
 
+    }
+
+    */
+
+    // CoolDowns
+
+    IEnumerator JumpCoolDown()
+    {
+        yield return new WaitForSeconds(jumpCoolDown);
+        _isJumping = false;
+    }
     
 
 }
