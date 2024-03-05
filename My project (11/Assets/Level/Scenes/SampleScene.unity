@@ -600,7 +600,7 @@ MonoBehaviour:
   jumpHeight: 5
   jumpCoolDown: 0.3
   playerHeight: 2
-  airSlowMuti: 3
+  airSlowMuti: 25
   airMaxXVel: 180
   airMaxYVel: 180
   airMaxZVel: 180
