@@ -112,6 +112,7 @@ public class playerMovement : MonoBehaviour
     {
         GetInputs();
         ControlDrag();
+        MovePlayer();
         ControlMag();
         CheckIfGrounded();
         // JumpCameraShake();
@@ -120,7 +121,6 @@ public class playerMovement : MonoBehaviour
 
     private void LateUpdate()
     {
-        MovePlayer();
     }
 
 
