@@ -49,6 +49,8 @@ public class playerMovement : MonoBehaviour
     public TextMeshProUGUI playerMagText;
     public TextMeshProUGUI playerYVelText;
 
+    [SerializeField] public List<TextMeshProUGUI> _textBlockList;
+
     [Header("Debug Settings")] [Tooltip("Show debug UI")]
 
     public bool turnDebugOn;
@@ -102,8 +104,13 @@ public class playerMovement : MonoBehaviour
         _rb.freezeRotation = true;
 
         // Subscribe to the methods
-
         playerActions.Jumping += Jumping;
+        playerActions.TextToDisable += ReturnList;
+        
+        _textBlockList.Add(playerMagText);
+        _textBlockList.Add(playerYVelText);
+
+
 
 
     }
@@ -117,12 +124,9 @@ public class playerMovement : MonoBehaviour
         CheckIfGrounded();
         // JumpCameraShake();
         DebugMode(turnDebugOn);
+        
     }
-
-    private void LateUpdate()
-    {
-    }
-
+    
 
     private void GetInputs()
     {
@@ -190,6 +194,7 @@ public class playerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(toStopMovingSpeed);
         _isMoving = false;
+
     }
 
 
@@ -246,6 +251,11 @@ public class playerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(jumpCoolDown);
         _isJumping = false;
+    }
+
+    private List<TextMeshProUGUI> ReturnList()
+    {
+        return _textBlockList;
     }
     
 

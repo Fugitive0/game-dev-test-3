@@ -6,7 +6,6 @@ using UnityEngine;
 public class playerLook : MonoBehaviour
 {
     // Public Variables
-
     
     [Header("Player Settings")]
     
@@ -35,6 +34,7 @@ public class playerLook : MonoBehaviour
     void Update()
     {
         PlayerLook();
+        CursorManage();
     }
 
 
@@ -44,6 +44,21 @@ public class playerLook : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+
+    private void CursorManage()
+    {
+        if (playerActions._isPaused)
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+    }
+    
     private void PlayerLook()
     {
         float mouseX = Input.GetAxis("Mouse X") * sensX * Time.deltaTime;
