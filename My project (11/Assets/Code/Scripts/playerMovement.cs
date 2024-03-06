@@ -242,7 +242,6 @@ public class playerMovement : MonoBehaviour
     */
 
     // CoolDowns
-
     IEnumerator JumpCoolDown()
     {
         yield return new WaitForSeconds(jumpCoolDown);
