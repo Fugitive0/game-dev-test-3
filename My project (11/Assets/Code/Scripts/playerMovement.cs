@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class playerMovement : MonoBehaviour
@@ -20,30 +21,15 @@ public class playerMovement : MonoBehaviour
     public float jumpCoolDown = 0.3f;
     public float playerHeight;
     public float airSlowMuti = 3f;
-
+    public float hitGroundSink = 0.2f;
+    public float waitToDetectGroundTime = 0.2f;
+    public float bringBackCool = 0.2f;
     [Header("Jump Head Bobbing")]
-    public float headRotSpeed = 0.3f;
-    public float yHeadRot = 5f;
-    public float yVelKickIn = 1f;
-    public float yVelLetGo = -2f;
-    public float lerpedValue;
     [SerializeField] private AnimationCurve headCurve;
-    public float duration;
-
-
-    public float ogCamYPos;
-
-
-    public float groundCastLength = 2f;
     [Range(0.1f, 1f)] public float toStopMovingSpeed = 0.3f;
 
 
     [Header("References")] public Transform playerOrientation;
-
-    public Transform rayRight;
-    public Transform rayLeft;
-    public Transform groundCast;
-    public Transform cam;
     public LayerMask ground;
 
     public TextMeshProUGUI playerMagText;
@@ -70,6 +56,7 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private bool _isGrounded;
     [SerializeField] private bool _isMoving;
     [SerializeField] private bool _isJumping;
+    [SerializeField] private bool initiatedCoolDown;
 
 
 
@@ -94,7 +81,6 @@ public class playerMovement : MonoBehaviour
     private void Awake()
     {
         defaultYPos = camRot.localPosition.y;
-        ogCamYPos = camRot.localRotation.y;
     }
 
     private void Start()
@@ -119,14 +105,18 @@ public class playerMovement : MonoBehaviour
     {
         GetInputs();
         ControlDrag();
-        MovePlayer();
         ControlMag();
         CheckIfGrounded();
         // JumpCameraShake();
         DebugMode(turnDebugOn);
         
     }
-    
+
+    private void LateUpdate()
+    {
+        MovePlayer();
+    }
+
 
     private void GetInputs()
     {
@@ -153,6 +143,7 @@ public class playerMovement : MonoBehaviour
             _isJumping = true;
             StartCoroutine(JumpCoolDown());
         }
+        
     }
 
 
@@ -172,7 +163,7 @@ public class playerMovement : MonoBehaviour
         }
 
     }
-
+    
     private void ControlMag()
     {
 
