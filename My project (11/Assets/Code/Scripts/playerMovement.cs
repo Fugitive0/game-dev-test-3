@@ -22,9 +22,10 @@ public class playerMovement : MonoBehaviour
     public float playerHeight;
     public float airSlowMuti = 3f;
     public float wallDetectDistance = 5f;
-    public float fovIncrease = 20f;
-    public float toNewFovTime = 5f;
     public float wallBoost = 35f;
+    public float afterWallJumpDrag = 5f;
+    public float wallJumpBoost = 5f;
+    public float wallJumpBoostDir = 5f;
     [Header("Jump Head Bobbing")]
     [SerializeField] private AnimationCurve headCurve;
     [Range(0.1f, 1f)] public float toStopMovingSpeed = 0.3f;
@@ -65,7 +66,8 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private bool _isWalledLeft;
     [SerializeField] private bool _isWalled;
     [SerializeField] private bool _noLongerWalled;
-
+    [SerializeField] private bool _allowExtraMag;
+    [SerializeField] private bool _ExtraMag;
 
 
 
@@ -124,7 +126,12 @@ public class playerMovement : MonoBehaviour
 
     private void LateUpdate()
     {
+    }
+
+    private void FixedUpdate()
+    {
         MovePlayer();
+        WallRunning();
     }
 
 
@@ -136,8 +143,8 @@ public class playerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
-        _moveDir = playerOrientation.forward * _vertical + playerOrientation.right * _horizontal;
-        _rb.AddForce(_moveDir.normalized * moveSpeed, ForceMode.Force);
+            _moveDir = playerOrientation.forward * _vertical + playerOrientation.right * _horizontal;
+            _rb.AddForce(_moveDir.normalized * moveSpeed, ForceMode.Force);
     }
 
     private void CheckIfGrounded()
@@ -147,11 +154,21 @@ public class playerMovement : MonoBehaviour
 
     private void Jumping()
     {
-        if (_isGrounded && !_isJumping)
+        if (_isGrounded || _isWalled && !_isJumping)
         {
             if (_isGrounded)
             {
                 _rb.AddForce(transform.up * (10 * jumpHeight), ForceMode.Impulse);
+            }
+
+            if (_isWalled && _isWalledLeft)
+            {
+                _rb.AddForce(playerOrientation.right * wallJumpBoostDir + playerOrientation.up * wallJumpBoost, ForceMode.Impulse);
+            }
+            
+            if (_isWalled && _isWalledRight)
+            {
+                _rb.AddForce(-playerOrientation.right * wallJumpBoostDir + playerOrientation.up * wallJumpBoost, ForceMode.Impulse);
             }
             _isJumping = true;
             StartCoroutine(JumpCoolDown());
@@ -162,13 +179,17 @@ public class playerMovement : MonoBehaviour
 
     private void ControlDrag()
     {
-        if (_rb.velocity.magnitude <= 3f && _isGrounded)
+        if (_rb.velocity.magnitude <= 3f && _isGrounded && !_ExtraMag)
         {
             _rb.drag = stopMovingDrag;
         }
-        else if (!_isGrounded)
+        else if (!_isGrounded && !_ExtraMag)
         {
             _rb.drag = airDrag;
+        }
+        else if (_ExtraMag)
+        {
+            _rb.drag = afterWallJumpDrag;
         }
         else
         {
@@ -182,12 +203,12 @@ public class playerMovement : MonoBehaviour
 
         Vector3 flatVel = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
 
-        if (flatVel.magnitude > moveSpeed && _isGrounded)
+        if (flatVel.magnitude > moveSpeed && _isGrounded && !_ExtraMag)
         {
             Vector3 limitedVel = flatVel.normalized * moveSpeed;
             _rb.velocity = new Vector3(limitedVel.x, _rb.velocity.y, limitedVel.z);
         }
-        else if (flatVel.magnitude > airSlowMuti && !_isGrounded)
+        else if (flatVel.magnitude > airSlowMuti && !_isGrounded && !_ExtraMag)
         {
             Vector3 limitedVel = flatVel.normalized * (airSlowMuti);
             _rb.velocity = new Vector3(limitedVel.x, _rb.velocity.y, limitedVel.z);
@@ -222,32 +243,38 @@ public class playerMovement : MonoBehaviour
 
         if (_isWalledLeft && Input.GetAxis("Horizontal") < 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(-playerOrientation.right * 45 + playerOrientation.forward * wallBoost, ForceMode.Force);
+            _rb.AddForce(playerOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
-            float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);
+            _allowExtraMag = true;
         }
         
         else if (_isWalledRight && Input.GetAxis("Horizontal") > 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(playerOrientation.right * 45 + playerOrientation.forward * wallBoost, ForceMode.Force);
+            _rb.AddForce(playerOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
-            float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);
+            _allowExtraMag = true;
         }
         else 
         {
             _rb.useGravity = true;
             _isWalled = false;
-
+            
+            if (_allowExtraMag && _isGrounded)
+            {
+                _ExtraMag = true;
+                StartCoroutine(ExtraMagWindow());
+            }
         }
         
     }
 
-    IEnumerator WaitToFinishFovChange()
+    IEnumerator ExtraMagWindow()
     {
-        yield return new WaitForSeconds(3f);
-        _noLongerWalled = false;
+        yield return new WaitForSeconds(2f);
+        _ExtraMag = false;
+        _allowExtraMag = false;
     }
 
 

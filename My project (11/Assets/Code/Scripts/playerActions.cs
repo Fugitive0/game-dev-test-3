@@ -35,8 +35,8 @@ public class playerActions : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         JumpAction();
-
         if (Input.GetKeyDown(pauseKey))
         {
             if (!_isPaused)
@@ -50,6 +50,7 @@ public class playerActions : MonoBehaviour
         }
       
     }
+    
 
     private void JumpAction()
     {
