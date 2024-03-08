@@ -6,7 +6,12 @@ using UnityEngine;
 
 public class playerActions : MonoBehaviour
 {
-    [Header("KeyBinds")] 
+    [Header("KeyBinds")] [Header("References")]
+
+    public static float playerFov = 90f;
+    
+    
+    
     KeyCode jumpKey = KeyCode.Space;
 
     private KeyCode pauseKey = KeyCode.Escape;

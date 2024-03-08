@@ -199,44 +199,7 @@ public class playerMovement : MonoBehaviour
             Debug.DrawLine(playerOrientation.position, transform.position + _rb.velocity, Color.red);
         }
     }
-
-    /*
-
-    private void JumpCameraShake()
-    {
-        // Scratch the last commit. I plan on making this a feature that allows the screen itself to shake. Not rotate
-        // Rotating the camera to shake it does not seem like the best option. Instead, changing the position a little bit
-        // Does
-
     
-
-        if (_rb.velocity.y >= yVelKickIn && !_isGrounded)
-        {
-            _ogPos = camRot.localPosition;
-            float shookX = Random.Range(0.3f, 0.6f);
-            float shookY = Random.Range(0.3f, 0.6f);
-
-            _targetPos = new Vector3(shookX, shookY, camRot.localPosition.z);
-            
-        }
-        
-        if (_rb.velocity.y <= 0 && !_isGrounded)
-        {
-            _targetPos = Vector3.zero;
-            _elapsedTime = 0;
-        }
-
-
-        _elapsedTime += Time.deltaTime;
-        float percentageComplete = _elapsedTime / duration;
-        float smoothPercentage = Mathf.SmoothStep(0.0f, 1.0f, percentageComplete);
-        camRot.localPosition = Vector3.Lerp(camRot.localPosition, _targetPos, smoothPercentage);
-
-    }
-
-    */
-
-    // CoolDowns
     IEnumerator JumpCoolDown()
     {
         yield return new WaitForSeconds(jumpCoolDown);
