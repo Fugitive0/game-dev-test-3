@@ -67,10 +67,5 @@ public class cameraSway : MonoBehaviour
 
     private void DebugMode(bool debugModeOn)
     {
-            // Draw line from the right side of the player orientation
-            
-        Debug.DrawLine(playerOrientation.position, playerOrientation.right  * 100f, Color.red);
-        Debug.DrawLine(playerOrientation.position, -playerOrientation.right * 100f, Color.red);
-            
     }
 }

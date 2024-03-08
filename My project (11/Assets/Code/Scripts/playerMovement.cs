@@ -21,9 +21,9 @@ public class playerMovement : MonoBehaviour
     public float jumpCoolDown = 0.3f;
     public float playerHeight;
     public float airSlowMuti = 3f;
-    public float hitGroundSink = 0.2f;
-    public float waitToDetectGroundTime = 0.2f;
-    public float bringBackCool = 0.2f;
+    public float wallDetectDistance = 5f;
+    public float fovIncrease = 20f;
+    public float toNewFovTime = 5f;
     [Header("Jump Head Bobbing")]
     [SerializeField] private AnimationCurve headCurve;
     [Range(0.1f, 1f)] public float toStopMovingSpeed = 0.3f;
@@ -31,6 +31,8 @@ public class playerMovement : MonoBehaviour
 
     [Header("References")] public Transform playerOrientation;
     public LayerMask ground;
+    public LayerMask wall;
+    public Camera cam;
 
     public TextMeshProUGUI playerMagText;
     public TextMeshProUGUI playerYVelText;
@@ -53,10 +55,15 @@ public class playerMovement : MonoBehaviour
     private float _horizontal;
     private float _vertical;
     private float _elapsedTime;
+    private float ogFov;
     [SerializeField] private bool _isGrounded;
     [SerializeField] private bool _isMoving;
     [SerializeField] private bool _isJumping;
     [SerializeField] private bool initiatedCoolDown;
+    [SerializeField] private bool _isWalledRight;
+    [SerializeField] private bool _isWalledLeft;
+    [SerializeField] private bool _isWalled;
+    [SerializeField] private bool _noLongerWalled;
 
 
 
@@ -95,6 +102,8 @@ public class playerMovement : MonoBehaviour
         _textBlockList.Add(playerMagText);
         _textBlockList.Add(playerYVelText);
 
+        ogFov = cam.fieldOfView;
+
 
 
 
@@ -103,6 +112,7 @@ public class playerMovement : MonoBehaviour
     void Update()
     {
         GetInputs();
+        WallRunning();
         ControlDrag();
         ControlMag();
         CheckIfGrounded();
@@ -136,9 +146,25 @@ public class playerMovement : MonoBehaviour
 
     private void Jumping()
     {
-        if (_isGrounded && !_isJumping)
+        if (_isGrounded || _isWalled && !_isJumping)
         {
-            _rb.AddForce(transform.up * (10 * jumpHeight), ForceMode.Impulse);
+            if (_isGrounded)
+            {
+                _rb.AddForce(transform.up * (10 * jumpHeight), ForceMode.Impulse);
+            }
+
+            if (_isWalled)
+            {
+                if (_isWalledRight)
+                {
+                    _rb.AddForce(playerOrientation.right * 100);
+                }
+
+                if (_isWalledLeft)
+                {
+                    _rb.AddForce(-playerOrientation.right * 100);
+                }
+            }
             _isJumping = true;
             StartCoroutine(JumpCoolDown());
         }
@@ -198,6 +224,49 @@ public class playerMovement : MonoBehaviour
 
             Debug.DrawLine(playerOrientation.position, transform.position + _rb.velocity, Color.red);
         }
+    }
+
+
+    private void WallRunning()
+    {
+        _isWalledLeft = Physics.Raycast(playerOrientation.position, -playerOrientation.right, wallDetectDistance, wall);
+        _isWalledRight = Physics.Raycast(playerOrientation.position, playerOrientation.right, wallDetectDistance, wall);
+
+        if (_isWalledLeft && Input.GetAxis("Horizontal") < 0 && !_isJumping && !_isGrounded)
+        {
+            _rb.AddForce(-playerOrientation.right * 45 + playerOrientation.forward * 20, ForceMode.Force);
+            _rb.useGravity = false;
+            _isWalled = true;
+            float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);
+        }
+        
+        else if (_isWalledRight && Input.GetAxis("Horizontal") > 0 && !_isJumping && !_isGrounded)
+        {
+            _rb.AddForce(playerOrientation.right * 45 + playerOrientation.forward * 20, ForceMode.Force);
+            _rb.useGravity = false;
+            _isWalled = true;
+            float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);
+        }
+        else 
+        {
+            _rb.useGravity = true;
+            _isWalled = false;
+
+        }
+        
+    }
+
+    IEnumerator WaitToFinishFovChange()
+    {
+        yield return new WaitForSeconds(3f);
+        _noLongerWalled = false;
+    }
+
+
+    IEnumerator WallRunCoolDown()
+    {
+        yield return new WaitForSeconds(3f);
+        _isWalled = false;
     }
     
     IEnumerator JumpCoolDown()
