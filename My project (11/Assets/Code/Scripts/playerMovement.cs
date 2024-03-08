@@ -24,6 +24,7 @@ public class playerMovement : MonoBehaviour
     public float wallDetectDistance = 5f;
     public float fovIncrease = 20f;
     public float toNewFovTime = 5f;
+    public float wallBoost = 35f;
     [Header("Jump Head Bobbing")]
     [SerializeField] private AnimationCurve headCurve;
     [Range(0.1f, 1f)] public float toStopMovingSpeed = 0.3f;
@@ -146,24 +147,11 @@ public class playerMovement : MonoBehaviour
 
     private void Jumping()
     {
-        if (_isGrounded || _isWalled && !_isJumping)
+        if (_isGrounded && !_isJumping)
         {
             if (_isGrounded)
             {
                 _rb.AddForce(transform.up * (10 * jumpHeight), ForceMode.Impulse);
-            }
-
-            if (_isWalled)
-            {
-                if (_isWalledRight)
-                {
-                    _rb.AddForce(playerOrientation.right * 100);
-                }
-
-                if (_isWalledLeft)
-                {
-                    _rb.AddForce(-playerOrientation.right * 100);
-                }
             }
             _isJumping = true;
             StartCoroutine(JumpCoolDown());
@@ -234,7 +222,7 @@ public class playerMovement : MonoBehaviour
 
         if (_isWalledLeft && Input.GetAxis("Horizontal") < 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(-playerOrientation.right * 45 + playerOrientation.forward * 20, ForceMode.Force);
+            _rb.AddForce(-playerOrientation.right * 45 + playerOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
             float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);
@@ -242,7 +230,7 @@ public class playerMovement : MonoBehaviour
         
         else if (_isWalledRight && Input.GetAxis("Horizontal") > 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(playerOrientation.right * 45 + playerOrientation.forward * 20, ForceMode.Force);
+            _rb.AddForce(playerOrientation.right * 45 + playerOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
             float newFov = Mathf.Lerp(ogFov, fovIncrease, toNewFovTime * Time.deltaTime);

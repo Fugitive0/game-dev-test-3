@@ -61,8 +61,6 @@ public class cameraSway : MonoBehaviour
         Quaternion finalRot = Quaternion.Euler(0f, rotZ, 0f);
         Quaternion targetRot = Quaternion.AngleAxis(rotZ, playerOrientation.transform.forward);
         transform.localRotation = Quaternion.Lerp(transform.localRotation, targetRot, rotSpeed);
-        
-
     }
 
     private void DebugMode(bool debugModeOn)
