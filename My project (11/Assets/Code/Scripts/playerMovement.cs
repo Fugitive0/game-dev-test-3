@@ -80,7 +80,6 @@ public class playerMovement : MonoBehaviour
 
     private void Awake()
     {
-        defaultYPos = camRot.localPosition.y;
     }
 
     private void Start()

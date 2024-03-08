@@ -21,7 +21,7 @@ public class playerLook : MonoBehaviour
     public Transform playerOrientation;
     public Transform armOrientation;
     public Transform cameraRot;
-    
+    public Transform playerRotation;
     
     
     
@@ -77,7 +77,8 @@ public class playerLook : MonoBehaviour
         // Apply rotation to the player's orientation
         playerOrientation.localRotation = Quaternion.Euler(0, _yRot, 0);
         // Apply rotation to the player's arm's orientation
-        armOrientation.localRotation = Quaternion.Euler(0, _yRot, 0);
+        armOrientation.localRotation = Quaternion.Euler(_xRot, _yRot, 0);
+        playerOrientation.localRotation = Quaternion.Euler(0, _yRot, 0);
 
     }
 }
