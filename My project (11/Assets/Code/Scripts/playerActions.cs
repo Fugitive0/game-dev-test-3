@@ -12,19 +12,22 @@ public class playerActions : MonoBehaviour
     
     
     
-    KeyCode jumpKey = KeyCode.Space;
+    public KeyCode jumpKey = KeyCode.Space;
 
-    private KeyCode pauseKey = KeyCode.Escape;
+    public KeyCode pauseKey = KeyCode.Escape;
+
+    public KeyCode reloadKey = KeyCode.R;
+    
     
     public static Action Jumping;
     public static Action Pause;
+    public static Action GunReload;
+    public static Action GunShoot;
+    public static Action GunRecoil;
     public static Func<List<TextMeshProUGUI>> TextToDisable;
     public GameObject pauseMenu;
 
     public static bool _isPaused;
-    
-    
-    
     
     // Start is called before the first frame update
     void Start()
@@ -36,7 +39,13 @@ public class playerActions : MonoBehaviour
     void Update()
     {
         
+        // Jump Key
+        
         JumpAction();
+        
+        
+        // Pause Button
+        
         if (Input.GetKeyDown(pauseKey))
         {
             if (!_isPaused)
@@ -48,6 +57,21 @@ public class playerActions : MonoBehaviour
                 ResumeGame();
             }
         }
+        
+        // Gun reload key
+
+        if (Input.GetKeyDown(reloadKey))
+        {
+            GunReload?.Invoke();
+        }
+        
+        // Gun Shoot Key
+        
+        if (Input.GetMouseButton(0))
+        {
+            GunShoot?.Invoke();
+        }
+
       
     }
     

@@ -57,6 +57,12 @@ public class cameraSway : MonoBehaviour
         
         float mouseY = Input.GetAxis("Horizontal");
         float rotZ = -mouseY * rotAmount;
+
+        if (rb.velocity.y == 1f)
+        {
+            Debug.Log("Hello world");
+        }
+        
         
         Quaternion finalRot = Quaternion.Euler(0f, rotZ, 0f);
         Quaternion targetRot = Quaternion.AngleAxis(rotZ, playerOrientation.transform.forward);

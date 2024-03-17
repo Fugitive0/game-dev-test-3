@@ -26,6 +26,23 @@ public class playerMovement : MonoBehaviour
     public float afterWallJumpDrag = 5f;
     public float wallJumpBoost = 5f;
     public float wallJumpBoostDir = 5f;
+    public float maxSlopeAngle = 20f;
+    public float dashAmount;
+    public float dashCoolDown = 0.5f;
+    public int allowGrapple;
+
+
+    [Header("Grapple Settings")]
+    
+    
+    public float maxGrappleDist = 100f;
+
+    public float massScale = 4.5f;
+    public float damperAmount = 2f;
+    public float springAmount = 3f;
+    
+    
+    
     [Header("Jump Head Bobbing")]
     [SerializeField] private AnimationCurve headCurve;
     [Range(0.1f, 1f)] public float toStopMovingSpeed = 0.3f;
@@ -34,7 +51,11 @@ public class playerMovement : MonoBehaviour
     [Header("References")] public Transform playerOrientation;
     public LayerMask ground;
     public LayerMask wall;
+    public LayerMask slope;
+    public LayerMask whatIsGrapple;
     public Camera cam;
+    public Transform grappleShootPoint, camPos, player;
+    public Transform armOrientation;
 
     public TextMeshProUGUI playerMagText;
     public TextMeshProUGUI playerYVelText;
@@ -49,15 +70,25 @@ public class playerMovement : MonoBehaviour
 
 
     // Private Variables
+
+    private RaycastHit _slopeHit; 
+    
     private Rigidbody _rb;
-    private Vector3 _moveDir;
+    private LineRenderer _ln;
+    
     private Quaternion _camTargetRot;
+    
+    private Vector3 _moveDir;
     private Vector3 _targetPos;
     private Vector3 _ogPos;
+    private Vector3 grapplePoint;
+
+    private SpringJoint playerJoint;
+    
+    
     private float _horizontal;
     private float _vertical;
     private float _elapsedTime;
-    private float ogFov;
     [SerializeField] private bool _isGrounded;
     [SerializeField] private bool _isMoving;
     [SerializeField] private bool _isJumping;
@@ -68,7 +99,8 @@ public class playerMovement : MonoBehaviour
     [SerializeField] private bool _noLongerWalled;
     [SerializeField] private bool _allowExtraMag;
     [SerializeField] private bool _ExtraMag;
-
+    [SerializeField] private bool _isSloped;
+    [SerializeField] private bool _isDashing;
 
 
 
@@ -87,51 +119,47 @@ public class playerMovement : MonoBehaviour
 
     // Start is called before the first frame update
     // Update is called once per frame
-
-    private void Awake()
-    {
-    }
-
+    
     private void Start()
     {
         // Freeze the rotation of the Rigid Body
         _rb = GetComponent<Rigidbody>();
         _rb.freezeRotation = true;
+        _ln = GetComponent<LineRenderer>();
 
         // Subscribe to the methods
         playerActions.Jumping += Jumping;
-        playerActions.TextToDisable += ReturnList;
         
         _textBlockList.Add(playerMagText);
         _textBlockList.Add(playerYVelText);
-
-        ogFov = cam.fieldOfView;
-
-
-
-
     }
 
     void Update()
     {
+
+        _isSloped = OnSlope();
+        
         GetInputs();
         WallRunning();
+        Grapple();
         ControlDrag();
+        PlayerDash();
         ControlMag();
         CheckIfGrounded();
         // JumpCameraShake();
         DebugMode(turnDebugOn);
-        
     }
-
-    private void LateUpdate()
-    {
-    }
+    
 
     private void FixedUpdate()
     {
         MovePlayer();
         WallRunning();
+    }
+
+    private void LateUpdate()
+    {
+        DrawRope();
     }
 
 
@@ -144,7 +172,87 @@ public class playerMovement : MonoBehaviour
     private void MovePlayer()
     {
             _moveDir = playerOrientation.forward * _vertical + playerOrientation.right * _horizontal;
-            _rb.AddForce(_moveDir.normalized * moveSpeed, ForceMode.Force);
+            if (!OnSlope())
+            {
+                _rb.useGravity = true;
+                _rb.AddForce(_moveDir.normalized * moveSpeed, ForceMode.Force);
+            }
+            else
+            {
+                _rb.useGravity = false;
+                _rb.AddForce(GetSlopeMoveDirection() * moveSpeed, ForceMode.Force);
+            }
+          
+    }
+
+
+    private void Grapple()
+    {
+        if (Input.GetMouseButtonDown(3))
+        {
+            StartGrapple();
+        }
+
+        else if (Input.GetMouseButtonUp(3))
+        {
+            StopGrapple();
+        }
+    }
+
+    private void StopGrapple()
+    {
+        _ln.positionCount = 0;
+        Destroy(playerJoint);
+    }
+
+    private void StartGrapple()
+    {
+        RaycastHit hit;
+        int combinedLayerMask = wall.value | whatIsGrapple.value;
+        if (Physics.Raycast(camPos.position, camPos.forward, out hit, maxGrappleDist, combinedLayerMask))
+        {
+            grapplePoint = hit.point;
+            playerJoint = player.gameObject.AddComponent<SpringJoint>();
+            playerJoint.autoConfigureConnectedAnchor = false;
+            playerJoint.connectedAnchor = grapplePoint;
+
+            float distanceFromPoint = Vector3.Distance(player.position, grapplePoint);
+
+            playerJoint.maxDistance = distanceFromPoint * 0.8f;
+            playerJoint.minDistance = distanceFromPoint * 0.25f;
+
+            playerJoint.spring = springAmount;
+            playerJoint.damper = damperAmount;
+            playerJoint.massScale = massScale;
+
+            _ln.positionCount = 2;
+        }
+    }
+
+    private void DrawRope()
+    {
+        if(!playerJoint) return;
+        _ln.SetPosition(0, grappleShootPoint.position);
+        _ln.SetPosition(1, grapplePoint);
+    }
+    private void PlayerDash()
+    {
+        if (Input.GetMouseButtonDown(1) && !_isDashing)
+        {
+            _rb.AddForce(playerOrientation.forward * dashAmount, ForceMode.Impulse);
+            _isDashing = true;
+        }
+
+        if (_isDashing)
+        {
+            StartCoroutine(DashCoolDown());
+        }
+    }
+
+    IEnumerator DashCoolDown()
+    {
+        yield return new WaitForSeconds(dashCoolDown);
+        _isDashing = false;
     }
 
     private void CheckIfGrounded()
@@ -243,7 +351,7 @@ public class playerMovement : MonoBehaviour
 
         if (_isWalledLeft && Input.GetAxis("Horizontal") < 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(playerOrientation.forward * wallBoost, ForceMode.Force);
+            _rb.AddForce(armOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
             _allowExtraMag = true;
@@ -251,7 +359,7 @@ public class playerMovement : MonoBehaviour
         
         else if (_isWalledRight && Input.GetAxis("Horizontal") > 0 && !_isJumping && !_isGrounded)
         {
-            _rb.AddForce(playerOrientation.forward * wallBoost, ForceMode.Force);
+            _rb.AddForce(armOrientation.forward * wallBoost, ForceMode.Force);
             _rb.useGravity = false;
             _isWalled = true;
             _allowExtraMag = true;
@@ -270,6 +378,25 @@ public class playerMovement : MonoBehaviour
         
     }
 
+    private bool OnSlope()
+    {
+        if (Physics.Raycast(playerOrientation.position, Vector3.down, out _slopeHit, playerHeight * 0.5f + 0.2f))
+        {
+            float angle = Vector3.Angle(Vector3.up, _slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private Vector3 GetSlopeMoveDirection()
+    {
+        return Vector3.ProjectOnPlane(_moveDir, _slopeHit.normal).normalized;
+    }
+    
+    
     IEnumerator ExtraMagWindow()
     {
         yield return new WaitForSeconds(2f);
@@ -289,11 +416,7 @@ public class playerMovement : MonoBehaviour
         yield return new WaitForSeconds(jumpCoolDown);
         _isJumping = false;
     }
-
-    private List<TextMeshProUGUI> ReturnList()
-    {
-        return _textBlockList;
-    }
+    
     
 
 }
